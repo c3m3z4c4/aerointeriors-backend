@@ -5,4 +5,4 @@ RUN npm ci --only=production
 COPY . .
 RUN npx prisma generate
 EXPOSE 4000
-CMD ["node", "src/app.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node src/app.js"]
