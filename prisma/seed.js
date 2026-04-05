@@ -56,11 +56,15 @@ async function main() {
     { title_en: 'R&R Custom Inspection', title_es: 'Inspección y Reemplazo', description_en: 'Comprehensive remove and replace inspections ensuring all interior components meet regulatory compliance and safety standards.', description_es: 'Inspecciones integrales de desmontaje y reemplazo para cumplimiento regulatorio y estándares de seguridad.', icon: 'ClipboardCheck', order: 8 },
   ];
 
-  for (const s of services) {
-    await prisma.service.create({ data: { orgId: org.id, visible: true, ...s } });
+  const existingServices = await prisma.service.count({ where: { orgId: org.id } });
+  if (existingServices === 0) {
+    for (const s of services) {
+      await prisma.service.create({ data: { orgId: org.id, visible: true, ...s } });
+    }
   }
 
-  await prisma.project.createMany({
+  const existingProjects = await prisma.project.count({ where: { orgId: org.id } });
+  if (existingProjects === 0) await prisma.project.createMany({
     data: [
       {
         orgId: org.id,
@@ -97,21 +101,24 @@ async function main() {
     ],
   });
 
-  await prisma.certification.createMany({
+  const existingCerts = await prisma.certification.count({ where: { orgId: org.id } });
+  if (existingCerts === 0) await prisma.certification.createMany({
     data: [
       { orgId: org.id, title_en: 'FAA Part 145 Repair Station', title_es: 'Estación de Reparación FAA Part 145', issuer: 'Federal Aviation Administration', issueDate: '2019-07-01', credUrl: 'https://www.faa.gov', visible: true, order: 0 },
       { orgId: org.id, title_en: 'EASA Part-21 Design Organisation', title_es: 'Organización de Diseño EASA Part-21', issuer: 'European Union Aviation Safety Agency', issueDate: '2020-03-15', credUrl: 'https://www.easa.europa.eu', visible: true, order: 1 },
     ],
   });
 
-  await prisma.teamMember.createMany({
+  const existingTeam = await prisma.teamMember.count({ where: { orgId: org.id } });
+  if (existingTeam === 0) await prisma.teamMember.createMany({
     data: [
       { orgId: org.id, name: 'Ricardo Montoya', role_en: 'CEO & Chief Design Officer', role_es: 'CEO y Director de Diseño', bio_en: '20+ years in aviation interior design. Former lead designer at Lufthansa Technik. Passionate about merging aerospace engineering with luxury design.', bio_es: 'Más de 20 años en diseño de interiores de aviación. Ex-diseñador principal en Lufthansa Technik.', order: 0, visible: true },
       { orgId: org.id, name: 'Elena Vasquez', role_en: 'Head of Completions', role_es: 'Directora de Completaciones', bio_en: 'Specialized in VIP completions for heads of state. FAA-certified completion engineer with 15 years of experience.', bio_es: 'Especializada en completaciones VIP para jefes de estado. Ingeniera de completaciones certificada por la FAA.', order: 1, visible: true },
     ],
   });
 
-  await prisma.socialLink.createMany({
+  const existingLinks = await prisma.socialLink.count({ where: { orgId: org.id } });
+  if (existingLinks === 0) await prisma.socialLink.createMany({
     data: [
       { orgId: org.id, platform: 'LinkedIn', url: 'https://linkedin.com/company/air-interiors', order: 0 },
       { orgId: org.id, platform: 'Instagram', url: 'https://instagram.com/airinteriorssolutions', order: 1 },
