@@ -1,8 +1,9 @@
-FROM node:20-alpine
+FROM node:20-slim
 WORKDIR /app
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 COPY package*.json ./
 RUN npm ci --only=production
 COPY . .
 RUN npx prisma generate
 EXPOSE 4000
-CMD ["sh", "-c", "node -e \"const h=require('http');h.createServer((_,r)=>{r.writeHead(200);r.end('ok')}).listen(4000,()=>console.log('ok on 4000'))\""]
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss && node src/app.js"]
