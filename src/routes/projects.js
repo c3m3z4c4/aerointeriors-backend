@@ -1,0 +1,18 @@
+const express = require('express');
+const { PrismaClient } = require('@prisma/client');
+const { crudFactory } = require('../lib/crudFactory');
+const { authenticate, requireAdmin } = require('../middleware/auth');
+
+const router = express.Router();
+const prisma = new PrismaClient();
+const crud = crudFactory(prisma.project, { bulkFields: ['visible', 'featured'] });
+
+router.get('/', crud.getAll);
+router.get('/:id', crud.getOne);
+router.post('/', authenticate, requireAdmin, crud.create);
+router.put('/:id', authenticate, requireAdmin, crud.update);
+router.delete('/:id', authenticate, requireAdmin, crud.remove);
+router.patch('/reorder', authenticate, requireAdmin, crud.reorder);
+router.patch('/bulk', authenticate, requireAdmin, crud.bulkUpdate);
+
+module.exports = router;

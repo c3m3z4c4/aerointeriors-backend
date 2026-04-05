@@ -1,0 +1,201 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Profile {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  password_hash String
+  name          String
+  role          String   @default("user")
+  createdAt     DateTime @default(now())
+}
+
+model Organization {
+  id          String             @id @default(cuid())
+  name        String
+  slug        String             @unique
+  createdAt   DateTime           @default(now())
+  projects    Project[]
+  services    Service[]
+  team        TeamMember[]
+  certs       Certification[]
+  messages    ContactMessage[]
+  socialLinks SocialLink[]
+  settings    SiteSettings?
+  brochures   BrochureFile[]
+  downloads   BrochureDownload[]
+  aiConvos    AiConversation[]
+}
+
+model Project {
+  id             String       @id @default(cuid())
+  orgId          String
+  org            Organization @relation(fields: [orgId], references: [id])
+  title_en       String
+  title_es       String
+  description_en String
+  description_es String
+  images         String[]
+  category       String
+  aircraftType   String
+  client         String?
+  year           Int
+  featured       Boolean      @default(false)
+  visible        Boolean      @default(true)
+  order          Int          @default(0)
+  tags           String[]
+  createdAt      DateTime     @default(now())
+}
+
+model Service {
+  id             String       @id @default(cuid())
+  orgId          String
+  org            Organization @relation(fields: [orgId], references: [id])
+  title_en       String
+  title_es       String
+  description_en String
+  description_es String
+  icon           String
+  image          String?
+  order          Int          @default(0)
+  visible        Boolean      @default(true)
+}
+
+model TeamMember {
+  id       String       @id @default(cuid())
+  orgId    String
+  org      Organization @relation(fields: [orgId], references: [id])
+  name     String
+  role_en  String
+  role_es  String
+  bio_en   String
+  bio_es   String
+  photo    String?
+  linkedIn String?
+  order    Int          @default(0)
+  visible  Boolean      @default(true)
+}
+
+model Certification {
+  id        String       @id @default(cuid())
+  orgId     String
+  org       Organization @relation(fields: [orgId], references: [id])
+  title_en  String
+  title_es  String
+  issuer    String
+  logo      String?
+  issueDate String
+  credUrl   String?
+  visible   Boolean      @default(true)
+  order     Int          @default(0)
+}
+
+model ContactMessage {
+  id            String       @id @default(cuid())
+  orgId         String
+  org           Organization @relation(fields: [orgId], references: [id])
+  name          String
+  company       String?
+  email         String
+  phone         String?
+  aircraftModel String?
+  serviceType   String?
+  message       String
+  isRead        Boolean      @default(false)
+  createdAt     DateTime     @default(now())
+}
+
+model SocialLink {
+  id       String       @id @default(cuid())
+  orgId    String
+  org      Organization @relation(fields: [orgId], references: [id])
+  platform String
+  url      String
+  order    Int          @default(0)
+}
+
+model SiteSettings {
+  id                      String       @id @default(cuid())
+  orgId                   String       @unique
+  org                     Organization @relation(fields: [orgId], references: [id])
+  heroTagline_en          String       @default("Precision Crafted. Sky Bound.")
+  heroTagline_es          String       @default("Precisión Artesanal. Rumbo al Cielo.")
+  heroTitle_en            String       @default("Aircraft Interior")
+  heroTitle_es            String       @default("Interiores de Aeronaves")
+  heroTitleHighlight      String       @default("Excellence")
+  heroCta1_en             String       @default("Explore Our Work")
+  heroCta1_es             String       @default("Explorar Proyectos")
+  heroCta2_en             String       @default("Request a Quote")
+  heroCta2_es             String       @default("Solicitar Cotización")
+  companyName             String       @default("Aircraft Interiors Solutions")
+  companyLogo             String?
+  favicon                 String?
+  phone                   String?
+  email                   String?
+  address                 String?
+  primaryColorLight       String       @default("#0ea5e9")
+  primaryColorDark        String       @default("#38bdf8")
+  bgColorLight            String       @default("#ffffff")
+  bgColorDark             String       @default("#0a0f1e")
+  projectsSectionTitle_en String       @default("Our Projects")
+  projectsSectionTitle_es String       @default("Nuestros Proyectos")
+  servicesSectionTitle_en String       @default("Our Services")
+  servicesSectionTitle_es String       @default("Nuestros Servicios")
+  teamSectionTitle_en     String       @default("Our Team")
+  teamSectionTitle_es     String       @default("Nuestro Equipo")
+  certSectionTitle_en     String       @default("Certifications")
+  certSectionTitle_es     String       @default("Certificaciones")
+  contactSectionTitle_en  String       @default("Contact Us")
+  contactSectionTitle_es  String       @default("Contáctanos")
+  footerText_en           String       @default("Crafting excellence at 40,000 feet.")
+  footerText_es           String       @default("Excelencia artesanal a 40,000 pies.")
+  aiProvider              String?
+  aiModel                 String?
+  aiSystemPrompt          String?
+  openaiKey               String?
+  anthropicKey            String?
+  geminiKey               String?
+}
+
+model BrochureFile {
+  id         String       @id @default(cuid())
+  orgId      String
+  org        Organization @relation(fields: [orgId], references: [id])
+  filename   String
+  path       String
+  isCurrent  Boolean      @default(false)
+  uploadedAt DateTime     @default(now())
+}
+
+model BrochureDownload {
+  id        String       @id @default(cuid())
+  orgId     String
+  org       Organization @relation(fields: [orgId], references: [id])
+  ip        String?
+  userAgent String?
+  createdAt DateTime     @default(now())
+}
+
+model AiConversation {
+  id        String       @id @default(cuid())
+  orgId     String
+  org       Organization @relation(fields: [orgId], references: [id])
+  title     String
+  messages  AiMessage[]
+  createdAt DateTime     @default(now())
+}
+
+model AiMessage {
+  id             String         @id @default(cuid())
+  conversationId String
+  conversation   AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String
+  content        String
+  createdAt      DateTime       @default(now())
+}
