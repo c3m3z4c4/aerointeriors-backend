@@ -17,8 +17,11 @@ const socialLinksRouter = require('./routes/socialLinks');
 const siteSettingsRouter = require('./routes/siteSettings');
 const uploadRouter = require('./routes/upload');
 const aiRouter = require('./routes/ai');
+const crmRouter = require('./routes/crm');
+const appointmentsRouter = require('./routes/appointments');
 const { errorHandler } = require('./middleware/errorHandler');
 const { publicLimiter, writeLimiter } = require('./middleware/rateLimit');
+const { authenticate, requireAdmin } = require('./middleware/auth');
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 const app = express();
@@ -54,6 +57,8 @@ app.use('/api/social-links', publicLimiter, socialLinksRouter);
 app.use('/api/site-settings', publicLimiter, siteSettingsRouter);
 app.use('/api/upload', publicLimiter, uploadRouter);
 app.use('/api/ai', publicLimiter, aiRouter);
+app.use('/api/crm', authenticate, requireAdmin, crmRouter);
+app.use('/api/appointments', authenticate, requireAdmin, appointmentsRouter);
 
 app.use(errorHandler);
 

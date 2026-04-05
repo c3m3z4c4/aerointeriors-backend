@@ -17,20 +17,23 @@ model Profile {
 }
 
 model Organization {
-  id          String             @id @default(cuid())
-  name        String
-  slug        String             @unique
-  createdAt   DateTime           @default(now())
-  projects    Project[]
-  services    Service[]
-  team        TeamMember[]
-  certs       Certification[]
-  messages    ContactMessage[]
-  socialLinks SocialLink[]
-  settings    SiteSettings?
-  brochures   BrochureFile[]
-  downloads   BrochureDownload[]
-  aiConvos    AiConversation[]
+  id           String             @id @default(cuid())
+  name         String
+  slug         String             @unique
+  createdAt    DateTime           @default(now())
+  projects     Project[]
+  services     Service[]
+  team         TeamMember[]
+  certs        Certification[]
+  messages     ContactMessage[]
+  socialLinks  SocialLink[]
+  settings     SiteSettings?
+  brochures    BrochureFile[]
+  downloads    BrochureDownload[]
+  aiConvos     AiConversation[]
+  clients      Client[]
+  quotes       Quote[]
+  appointments Appointment[]
 }
 
 model Project {
@@ -198,4 +201,52 @@ model AiMessage {
   role           String
   content        String
   createdAt      DateTime       @default(now())
+}
+
+model Client {
+  id           String        @id @default(cuid())
+  orgId        String
+  org          Organization  @relation(fields: [orgId], references: [id])
+  name         String
+  email        String?
+  phone        String?
+  company      String?
+  notes        String?
+  status       String        @default("prospect")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  quotes       Quote[]
+  appointments Appointment[]
+}
+
+model Quote {
+  id        String       @id @default(cuid())
+  orgId     String
+  org       Organization @relation(fields: [orgId], references: [id])
+  clientId  String
+  client    Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  title     String
+  amount    Float?
+  currency  String       @default("USD")
+  status    String       @default("draft")
+  pdfPath   String?
+  notes     String?
+  date      DateTime     @default(now())
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model Appointment {
+  id        String       @id @default(cuid())
+  orgId     String
+  org       Organization @relation(fields: [orgId], references: [id])
+  clientId  String?
+  client    Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  title     String
+  date      DateTime
+  duration  Int          @default(60)
+  notes     String?
+  status    String       @default("scheduled")
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 }
