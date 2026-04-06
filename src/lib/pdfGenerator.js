@@ -17,17 +17,23 @@ const MARGIN = 48;
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-// Helvetica (Standard PDF font) only supports Windows-1252 / Latin-1.
-// Strip any character outside that range to avoid pdf-lib throwing.
+// Helvetica (Standard PDF font) only supports printable Windows-1252 glyphs.
+// Control characters (0x00–0x1F, 0x7F) including \n \r \t are NOT renderable.
 function sanitize(str) {
   if (!str) return '';
-  return String(str).replace(/[^\x00-\xFF]/g, '?')
+  return String(str)
     // common Unicode → Latin equivalents
     .replace(/[\u2018\u2019]/g, "'")
     .replace(/[\u201C\u201D]/g, '"')
     .replace(/[\u2013\u2014]/g, '-')
     .replace(/\u2026/g, '...')
-    .replace(/[^\x00-\xFF]/g, '?');
+    // newlines / tabs → space (main culprit: 0x000a)
+    .replace(/[\r\n\t]+/g, ' ')
+    // strip remaining control characters (0x00-0x1F and 0x7F)
+    .replace(/[\x00-\x1F\x7F]/g, '')
+    // strip characters outside Windows-1252 range
+    .replace(/[^\x20-\xFF]/g, '?')
+    .trim();
 }
 
 function drawRect(page, x, y, w, h, color) {
@@ -76,12 +82,17 @@ function wrapText(font, str, size, maxWidth) {
 }
 
 // Draw wrapped text, returns new Y
+// Handles multi-line strings by splitting on \n first, then word-wrapping each paragraph
 function drawWrapped(page, font, str, x, y, size, maxWidth, lineHeight, color = DARK) {
-  const lines = wrapText(font, str, size, maxWidth);
+  if (!str) return y;
+  const paragraphs = String(str).split(/\r?\n/);
   let cy = y;
-  for (const l of lines) {
-    text(page, font, l, x, cy, size, color);
-    cy -= lineHeight;
+  for (const para of paragraphs) {
+    const lines = wrapText(font, para, size, maxWidth);
+    for (const l of lines) {
+      text(page, font, l, x, cy, size, color);
+      cy -= lineHeight;
+    }
   }
   return cy;
 }
