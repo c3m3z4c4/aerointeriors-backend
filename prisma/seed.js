@@ -125,6 +125,17 @@ async function main() {
     ],
   });
 
+  const existingKanban = await prisma.kanbanCard.count({ where: { orgId: org.id } });
+  if (existingKanban === 0) await prisma.kanbanCard.createMany({
+    data: [
+      { orgId: org.id, title: 'Gulfstream G650 Full Interior', aircraft: 'G650', client: 'Private Client', priority: 'high', column: 'inProgress', order: 0 },
+      { orgId: org.id, title: 'BBJ Leather Reupholstery', aircraft: 'Boeing BBJ', client: 'Corp Aviation', priority: 'medium', column: 'quoted', order: 0 },
+      { orgId: org.id, title: 'Citation XLS Carpet Replace', aircraft: 'Citation XLS', client: 'Charter Co.', priority: 'low', column: 'inquiry', order: 0 },
+      { orgId: org.id, title: 'G450 LED Upgrade', aircraft: 'G450', client: 'Family Office', priority: 'medium', column: 'review', order: 0 },
+      { orgId: org.id, title: 'Falcon 7X Wood Veneer', aircraft: 'Falcon 7X', client: 'Exec Client', priority: 'high', column: 'delivered', order: 0 },
+    ],
+  });
+
   console.log('Seed complete!');
 }
 
