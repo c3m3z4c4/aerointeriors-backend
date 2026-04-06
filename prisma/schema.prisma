@@ -33,6 +33,7 @@ model Organization {
   aiConvos     AiConversation[]
   clients      Client[]
   quotes       Quote[]
+  invoices     Invoice[]
   appointments Appointment[]
   kanbanCards  KanbanCard[]
 }
@@ -212,29 +213,102 @@ model Client {
   email        String?
   phone        String?
   company      String?
+  address      String?
+  city         String?
+  state        String?
+  zip          String?
   notes        String?
   status       String        @default("prospect")
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   quotes       Quote[]
+  invoices     Invoice[]
   appointments Appointment[]
 }
 
 model Quote {
-  id        String       @id @default(cuid())
-  orgId     String
-  org       Organization @relation(fields: [orgId], references: [id])
-  clientId  String
-  client    Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  title     String
-  amount    Float?
-  currency  String       @default("USD")
-  status    String       @default("draft")
-  pdfPath   String?
-  notes     String?
-  date      DateTime     @default(now())
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  id              String       @id @default(cuid())
+  orgId           String
+  org             Organization @relation(fields: [orgId], references: [id])
+  clientId        String
+  client          Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  quoteNumber     String?
+  title           String
+  // Aircraft info
+  aircraftMake    String?
+  aircraftModel   String?
+  aircraftYear    Int?
+  tailNumber      String?
+  // Project details
+  description     String?
+  lineItems       String?      // JSON: [{service, description, qty, unitPrice, total}]
+  estimatedStart  DateTime?
+  estimatedEnd    DateTime?
+  location        String?
+  // Financials
+  subtotal        Float?
+  taxRate         Float?
+  taxAmount       Float?
+  discount        Float?
+  total           Float?
+  depositRequired Float?
+  currency        String       @default("USD")
+  paymentTerms    String?
+  // Meta
+  status          String       @default("draft")
+  validUntil      DateTime?
+  terms           String?
+  notes           String?
+  pdfPath         String?
+  date            DateTime     @default(now())
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  invoices        Invoice[]
+}
+
+model Invoice {
+  id              String       @id @default(cuid())
+  orgId           String
+  org             Organization @relation(fields: [orgId], references: [id])
+  clientId        String
+  client          Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  quoteId         String?
+  quote           Quote?       @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  invoiceNumber   String?
+  // Bill-to info (snapshot at time of invoice)
+  billToName      String
+  billToCompany   String?
+  billToAddress   String?
+  billToCity      String?
+  billToState     String?
+  billToZip       String?
+  billToEmail     String?
+  billToPhone     String?
+  // Line items
+  lineItems       String?      // JSON: [{description, qty, unitPrice, total}]
+  // Financials
+  subtotal        Float?
+  taxRate         Float?
+  taxAmount       Float?
+  discount        Float?
+  total           Float?
+  amountPaid      Float        @default(0)
+  currency        String       @default("USD")
+  paymentTerms    String?
+  paymentMethod   String?
+  paymentNotes    String?
+  // Dates
+  issueDate       DateTime     @default(now())
+  dueDate         DateTime?
+  paidDate        DateTime?
+  // Meta
+  status          String       @default("draft")
+  poNumber        String?
+  notes           String?
+  terms           String?
+  pdfPath         String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 }
 
 model Appointment {
