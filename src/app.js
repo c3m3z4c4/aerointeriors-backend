@@ -20,6 +20,7 @@ const aiRouter = require('./routes/ai');
 const crmRouter = require('./routes/crm');
 const appointmentsRouter = require('./routes/appointments');
 const kanbanRouter = require('./routes/kanban');
+const backupRouter = require('./routes/backup');
 const { errorHandler } = require('./middleware/errorHandler');
 const { publicLimiter, writeLimiter } = require('./middleware/rateLimit');
 const { authenticate, requireAdmin } = require('./middleware/auth');
@@ -61,6 +62,7 @@ app.use('/api/ai', publicLimiter, aiRouter);
 app.use('/api/crm', authenticate, requireAdmin, crmRouter);
 app.use('/api/appointments', authenticate, requireAdmin, appointmentsRouter);
 app.use('/api/kanban', authenticate, requireAdmin, kanbanRouter);
+app.use('/api/backup', backupRouter);
 
 app.use(errorHandler);
 
