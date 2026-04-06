@@ -170,18 +170,27 @@ router.post('/:id/pdf', asyncHandler(async (req, res) => {
   if (!invoice) return res.status(404).json({ error: 'Not found' });
 
   const org = await getOrg(invoice.orgId);
-  const pdfBytes = await generateInvoicePdf(invoice, org);
 
-  const filename = `invoice-${invoice.invoiceNumber || invoice.id}.pdf`;
-  const filepath = path.join(PDF_DIR, filename);
-  fs.writeFileSync(filepath, pdfBytes);
+  let pdfBytes;
+  try {
+    pdfBytes = await generateInvoicePdf(invoice, org);
+  } catch (err) {
+    console.error('[PDF] generateInvoicePdf failed:', err.message, err.stack);
+    return res.status(500).json({ error: `PDF generation failed: ${err.message}` });
+  }
 
-  const pdfPath = `/uploads/invoices/${filename}`;
-  await prisma.invoice.update({ where: { id: invoice.id }, data: { pdfPath } });
-
-  res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-  res.send(Buffer.from(pdfBytes));
+  try {
+    const filename = `invoice-${invoice.invoiceNumber || invoice.id}.pdf`;
+    const filepath = path.join(PDF_DIR, filename);
+    fs.writeFileSync(filepath, pdfBytes);
+    await prisma.invoice.update({ where: { id: invoice.id }, data: { pdfPath: `/uploads/invoices/${filename}` } });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(Buffer.from(pdfBytes));
+  } catch (err) {
+    console.error('[PDF] write/send failed:', err.message);
+    return res.status(500).json({ error: `PDF save failed: ${err.message}` });
+  }
 }));
 
 module.exports = router;

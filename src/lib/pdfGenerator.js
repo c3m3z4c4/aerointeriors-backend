@@ -17,17 +17,38 @@ const MARGIN = 48;
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
+// Helvetica (Standard PDF font) only supports Windows-1252 / Latin-1.
+// Strip any character outside that range to avoid pdf-lib throwing.
+function sanitize(str) {
+  if (!str) return '';
+  return String(str).replace(/[^\x00-\xFF]/g, '?')
+    // common Unicode → Latin equivalents
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2013\u2014]/g, '-')
+    .replace(/\u2026/g, '...')
+    .replace(/[^\x00-\xFF]/g, '?');
+}
+
 function drawRect(page, x, y, w, h, color) {
   page.drawRectangle({ x, y, width: w, height: h, color });
 }
 
 function text(page, font, str, x, y, size, color = DARK) {
-  page.drawText(String(str ?? ''), { x, y, size, font, color });
+  try {
+    const safe = sanitize(str);
+    if (!safe) return;
+    page.drawText(safe, { x, y, size, font, color });
+  } catch { /* skip unsupported glyphs */ }
 }
 
 function money(amount, currency = 'USD') {
   if (amount == null) return '—';
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
+  try {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
+  } catch {
+    return `${currency} ${Number(amount).toFixed(2)}`;
+  }
 }
 
 function shortDate(d) {
@@ -38,7 +59,7 @@ function shortDate(d) {
 // Wrap text to max width, returns array of lines
 function wrapText(font, str, size, maxWidth) {
   if (!str) return [];
-  const words = str.split(' ');
+  const words = sanitize(str).split(' ');
   const lines = [];
   let current = '';
   for (const w of words) {

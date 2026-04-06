@@ -182,18 +182,27 @@ router.post('/quotes/:id/pdf', asyncHandler(async (req, res) => {
   if (!quote) return res.status(404).json({ error: 'Quote not found' });
 
   const org = await getOrg(quote.orgId);
-  const pdfBytes = await generateQuotePdf(quote, org);
 
-  const filename = `quote-${quote.quoteNumber || quote.id}.pdf`;
-  const filepath = path.join(PDF_DIR, filename);
-  fs.writeFileSync(filepath, pdfBytes);
+  let pdfBytes;
+  try {
+    pdfBytes = await generateQuotePdf(quote, org);
+  } catch (err) {
+    console.error('[PDF] generateQuotePdf failed:', err.message, err.stack);
+    return res.status(500).json({ error: `PDF generation failed: ${err.message}` });
+  }
 
-  const pdfPath = `/uploads/quotes/${filename}`;
-  await prisma.quote.update({ where: { id: quote.id }, data: { pdfPath } });
-
-  res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-  res.send(Buffer.from(pdfBytes));
+  try {
+    const filename = `quote-${quote.quoteNumber || quote.id}.pdf`;
+    const filepath = path.join(PDF_DIR, filename);
+    fs.writeFileSync(filepath, pdfBytes);
+    await prisma.quote.update({ where: { id: quote.id }, data: { pdfPath: `/uploads/quotes/${filename}` } });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(Buffer.from(pdfBytes));
+  } catch (err) {
+    console.error('[PDF] write/send failed:', err.message);
+    return res.status(500).json({ error: `PDF save failed: ${err.message}` });
+  }
 }));
 
 module.exports = router;
